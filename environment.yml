@@ -1,0 +1,14 @@
+name: paraphrase-identification
+dependencies:
+  - python=3.8.16
+  - tensorflow
+  - pip:
+      - datasets
+      - pandas
+      - numpy
+      - scikit-learn
+      - nltk
+      - matplotlib
+      - gensim
+      - seaborn
+      - chardet

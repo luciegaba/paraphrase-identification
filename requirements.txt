@@ -1,0 +1,10 @@
+datasets
+pandas
+numpy
+scikit-learn
+nltk
+matplotlib
+gensim
+seaborn
+tensorflow
+chardet
