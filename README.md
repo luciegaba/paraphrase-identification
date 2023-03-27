@@ -16,7 +16,7 @@ This projet aims to build Neural Network model to predict if two sentences are p
 ## Contents
 This project contains:
 - A folder for notebooks
-- Reporting folder containing reporting 
+- Reporting folder containing the report from this project 
 - "models" folder for saved best performance models
 - A folder "scripts" with data_utils module containing ETL and Embedding pipelines + two scripts for the two tested models (SiameseLSTM and BERTFineTuner)
 - Env files (explained after)
