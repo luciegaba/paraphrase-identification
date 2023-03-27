@@ -83,7 +83,7 @@ class SiameseNet:
         self.distance_layer_function = distance_layer_function
         self.activation_function_output = activation_function_output
         self.model = self.build_model()
-        
+        self.history = None
     def build_model(self):
         """
         Builds and returns a Siamese network model.
@@ -154,9 +154,10 @@ class SiameseNet:
             batch_size=batch_size, epochs=epochs, verbose=verbose,
             validation_data=([test_sentences_1,test_sentences_2],test_labels)
         )
+        return self.model
         
 
-    def predict(self, sentences_1, sentences_2):
+    def predict(self, sentences_1, sentences_2, threshold=0.5):
         """
         Makes predictions using the trained Siamese network model.
 
@@ -166,13 +167,29 @@ class SiameseNet:
             The first set of sentences to compare.
         sentences_2 : numpy.ndarray or list
             The second set of sentences to compare.
+        threshold : float, optional
+            The threshold for determining paraphrase or not, by default 0.5
 
         Returns
         -------
         numpy.ndarray
-            The probability to be paraphrase 
+            The predicted labels (0 for non-paraphrase, 1 for paraphrase)
         """
-        return self.model.predict([sentences_1, sentences_2])
+        probabilities = self.model.predict([sentences_1, sentences_2])
+        pred_labels = (probabilities >= threshold).astype(int)
+        return pred_labels
+
+    
+    def get_history(self):
+        """
+        Returns the training history of the Siamese network model.
+
+        Returns
+        -------
+        tensorflow.python.keras.callbacks.History
+            The training history object containing training and validation loss and accuracy.
+        """
+        return self.history
 
 
 
