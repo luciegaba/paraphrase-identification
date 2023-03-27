@@ -58,7 +58,7 @@ class SiameseNet:
         Predicts the similarity score between pairs of input sentences
     """
     
-    def __init__(self,max_len, weight_matrix,bi_directional_architecture_option=False, hidden_layer_architecture=LSTM,hidden_layer_neurons=128,activation_intermediate_option = True,activation_intermediate_function = "relu",distance_layer_function=manhattan_distance,activation_function_output = "sigmoid"):
+    def __init__(self,max_len, weight_matrix,bi_directional_architecture_option=False, hidden_layer_architecture=LSTM,hidden_layer_neurons=128,distance_layer_function=manhattan_distance,activation_function_output = "sigmoid"):
         self.input_dim = max_len
         self. weight_matrix = weight_matrix
         self.input_dim_embedding = weight_matrix.shape[0]
@@ -66,8 +66,6 @@ class SiameseNet:
         self.bi_directional_architecture_option = bi_directional_architecture_option
         self.hidden_layer_architecture = hidden_layer_architecture
         self.hidden_layer_neurons = hidden_layer_neurons
-        self.activation_intermediate_option = activation_intermediate_option
-        self.activation_intermediate_function = activation_intermediate_function
         self.distance_layer_function = distance_layer_function
         self.activation_function_output = activation_function_output
         self.model = self.build_model()
@@ -94,12 +92,7 @@ class SiameseNet:
         #Batch Normalization
         encoded1 = tf.keras.layers.BatchNormalization()(encoded1)
         encoded2 = shared_hidden_layer(shared_embedding(input2))
-        encoded2 = tf.keras.layers.BatchNormalization()(encoded2)
-        #If wanted, make a full-connected layer
-        if self.add_function_activation_post_LSTM:
-            shared_intermediate_activation = tf.keras.layers.Dense(self.intermediate_activation_layers, activation="relu")(output)
-            encoded1 = shared_intermediate_activation(encoded1)
-            encoded2 = shared_intermediate_activation(encoded2)
+        encoded2 = tf.keras.layers.BatchNormalization()(encoded2)        
         #Concatenate distance between 1 and 2
         merged_vector = tf.keras.layers.Lambda(lambda x: self.distance_layer_function(x[0], x[1]))([encoded1, encoded2])
         #Batch Normalization
