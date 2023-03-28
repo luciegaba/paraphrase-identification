@@ -8,3 +8,5 @@ gensim
 seaborn
 tensorflow
 chardet
+transformers
+tqdm
