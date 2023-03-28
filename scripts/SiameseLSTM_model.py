@@ -51,14 +51,12 @@ class SiameseNet:
         Architecture of the hidden layer (default: LSTM)
     hidden_layer_neurons : int
         Number of neurons in the hidden layer (default: 128)
-    activation_intermediate_option : bool
-        Whether to add an intermediate activation layer (default: True)
-    activation_intermediate_function : str
-        Name of the activation function for the intermediate layer (default: "relu")
     distance_layer_function : function
         Function used to calculate the distance between encoded sentences (default: manhattan_distance)
     activation_function_output : str
         Name of the activation function for the output layer (default: "sigmoid")
+    dropout_rate : int
+        Rate for dropout layer
     model : tensorflow.keras.models.Model
         Siamese Neural Network model
 
@@ -72,7 +70,7 @@ class SiameseNet:
         Predicts the similarity score between pairs of input sentences
     """
     
-    def __init__(self,max_len, weight_matrix,bi_directional_architecture_option=False, hidden_layer_architecture=LSTM,hidden_layer_neurons=128,distance_layer_function=manhattan_distance,activation_function_output = "sigmoid"):
+    def __init__(self,max_len, weight_matrix,bi_directional_architecture_option=False, hidden_layer_architecture=LSTM,hidden_layer_neurons=128,distance_layer_function=manhattan_distance,activation_function_output = "sigmoid",dropout_rate=0.1):
         self.input_dim = max_len
         self. weight_matrix = weight_matrix
         self.input_dim_embedding = weight_matrix.shape[0]
@@ -82,8 +80,8 @@ class SiameseNet:
         self.hidden_layer_neurons = hidden_layer_neurons
         self.distance_layer_function = distance_layer_function
         self.activation_function_output = activation_function_output
+        self.dropout_rate = dropout_rate
         self.model = self.build_model()
-        self.history = None
     def build_model(self):
         """
         Builds and returns a Siamese network model.
@@ -100,14 +98,17 @@ class SiameseNet:
         shared_embedding = tf.keras.layers.Embedding(input_dim=self.input_dim_embedding, output_dim=self.output_dim_embedding, weights=[self.weight_matrix])
         #Hidden layer 
         if self.bi_directional_architecture_option is True:
-            shared_hidden_layer = tf.keras.layers.Bidirectional(self.hidden_layer_architecture(self.hidden_layer_neurons, return_sequences=True))
+            shared_hidden_layer = tf.keras.layers.Bidirectional(self.hidden_layer_architecture(self.hidden_layer_neurons, return_sequences=False))
         else: 
             shared_hidden_layer = self.hidden_layer_architecture(self.hidden_layer_neurons)
+        dropout_layer = tf.keras.layers.Dropout(self.dropout_rate)
         #Apply lstm on inputs
         encoded1 = shared_hidden_layer(shared_embedding(input1))
         encoded2 = shared_hidden_layer(shared_embedding(input2))
         #Concatenate distance between 1 and 2
-        merged_vector = tf.keras.layers.Lambda(lambda x: self.distance_layer_function(x[0], x[1]))([encoded1, encoded2])
+        dropout_layer_s1 = dropout_layer(encoded1)
+        dropout_layer_s2 = dropout_layer(encoded2)
+        merged_vector = tf.keras.layers.Lambda(lambda x: self.distance_layer_function(x[0], x[1]))([dropout_layer_s1, dropout_layer_s2])
         #Output activation function
         output = tf.keras.layers.Dense(1, activation=self.activation_function_output)(merged_vector)
         siamese_net = tf.keras.models.Model(inputs=[input1, input2], outputs=output)
@@ -136,8 +137,6 @@ class SiameseNet:
             The batch size for training, by default 32.
         epochs : int, optional
             The number of epochs to train for, by default 10.
-        validation_split : float, optional
-            The percentage of the training data to use for validation, by default 0.2.
         verbose : int, optional
             The verbosity level for training output, by default 1.
         cost_function : str, optional
@@ -149,15 +148,15 @@ class SiameseNet:
         """
         
         self.model.compile(loss=cost_function, metrics=metrics,optimizer=optimizer)
-        self.model.fit(
+        history = self.model.fit(
             [train_sentences_1, train_sentences_2], train_labels,
             batch_size=batch_size, epochs=epochs, verbose=verbose,
-            validation_data=([test_sentences_1,test_sentences_2],test_labels)
+            validation_data=([test_sentences_1,test_sentences_2],test_labels),
         )
-        return self.model
+        return history
         
 
-    def predict(self, sentences_1, sentences_2, threshold=0.5):
+    def predict(self, sentences_1, sentences_2, labels=None, threshold=0.5):
         """
         Makes predictions using the trained Siamese network model.
 
@@ -167,6 +166,8 @@ class SiameseNet:
             The first set of sentences to compare.
         sentences_2 : numpy.ndarray or list
             The second set of sentences to compare.
+        labels : numpy.ndarray or list, optional
+            The labels corresponding to the sentences, by default None.
         threshold : float, optional
             The threshold for determining paraphrase or not, by default 0.5
 
@@ -176,20 +177,12 @@ class SiameseNet:
             The predicted labels (0 for non-paraphrase, 1 for paraphrase)
         """
         probabilities = self.model.predict([sentences_1, sentences_2])
-        pred_labels = (probabilities >= threshold).astype(int)
+        pred_labels = np.where(probabilities>threshold,1,0)
+
         return pred_labels
 
-    
-    def get_history(self):
-        """
-        Returns the training history of the Siamese network model.
 
-        Returns
-        -------
-        tensorflow.python.keras.callbacks.History
-            The training history object containing training and validation loss and accuracy.
-        """
-        return self.history
+
 
 
 

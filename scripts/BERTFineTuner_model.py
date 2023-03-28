@@ -14,6 +14,7 @@ def accuracy_score(y_true, y_pred):
     y_pred = np.round(y_pred).astype(int)
     accuracy = np.mean(y_true == y_pred)
     return accuracy
+
 class BertTransferModel:
     """
     A class to fine-tune a BERT model for sentence pair classification tasks.
@@ -217,7 +218,9 @@ class BertTransferModel:
             The predicted labels for each sentence pair.
         """
         if model_path:
-            model = BertForSequenceClassification.from_pretrained(model_path)
+            model = BertForSequenceClassification.from_pretrained(self.model)
+            model.load_state_dict(model_path)
+
         else:
             model = self.model
 
