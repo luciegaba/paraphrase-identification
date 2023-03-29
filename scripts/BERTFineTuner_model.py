@@ -149,7 +149,8 @@ class BertTransferModel:
             The name of the optimizer to use for fine-tuning (default: 'AdamW').
             Supported optimizers: 'AdamW', 'SGD'.
         """
-
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model.to(device)
         train_dataset = self.create_dataset(train_sentences_1, train_sentences_2, train_labels)
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=self.custom_dataloader_padder, drop_last=True)
 
@@ -178,6 +179,12 @@ class BertTransferModel:
                 optimizer.zero_grad()
                 input_ids, attention_masks, token_type_ids, labels = batch
                 outputs = self.model(input_ids, attention_mask=attention_masks, token_type_ids=token_type_ids, labels=labels)
+                # Move the input data to the GPU if available
+                input_ids = input_ids.to(device)
+                attention_masks = attention_masks.to(device)
+                token_type_ids = token_type_ids.to(device)
+                labels = labels.to(device)               
+            
                 loss = outputs.loss
                 running_loss += loss.item()
                 loss.backward()
