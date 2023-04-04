@@ -11,7 +11,7 @@
 <br>
 
 ## About
-This projet aims to build Neural Network model to predict if two sentences are paraphrases or not using Deep Learning.
+This projet aims to build Neural Network model to predict if two questions are paraphrases or not using Deep Learning.
 
 ## Contents
 This project contains:
@@ -36,7 +36,9 @@ conda env create -f environment.yml
 conda activate paraphrase-identification
 ```
 ### Results
-
+In this project, we mainly focused on developing a model from scratch to challenge ourselves. We built a Siamese LSTM model for this purpose. Nonetheless, you will see that our performance were not so good due to lack of quality fo data and a potential badly calibrated model.
+But we also make a "challenging" model based on Transformers called "ParaBERT": The BERT fine-tuned model can be found [here](https://huggingface.co/luciegaba/ParaBERT). 
+See more details about our project in our [report](https://github.com/luciegaba/paraphrase-identification/tree/main/reporting)
 
 ### Contact
 * [Lucie Gabagnou👸](https://github.com/luciegaba) - Lucie.Gabagnou@etu.univ-paris1.fr
